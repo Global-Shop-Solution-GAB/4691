@@ -1,0 +1,777 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.Form_Main..Create
+Gui.Form_Main..Caption("Engineering Dashboard")
+Gui.Form_Main..Size(15360,10695)
+Gui.Form_Main..MinX(0)
+Gui.Form_Main..MinY(0)
+Gui.Form_Main..Position(0,0)
+Gui.Form_Main..BackColor(-2147483633)
+Gui.Form_Main..MousePointer(0)
+Gui.Form_Main..Event(UnLoad,Form_Main_UnLoad)
+Gui.Form_Main.GsGridControl1.Create(GsGridControl)
+Gui.Form_Main.GsGridControl1.Size(15030,8460)
+Gui.Form_Main.GsGridControl1.Position(75,840)
+Gui.Form_Main.GsGridControl1.Event(RowCellClick,GsGridControl1_RowCellClick)
+Gui.Form_Main.GsGridControl1.Event(CellValueChanged,GsGridControl1_CellValueChanged)
+Gui.Form_Main.cmdRefresh.Create(Button)
+Gui.Form_Main.cmdRefresh.Size(615,375)
+Gui.Form_Main.cmdRefresh.Position(14370,165)
+Gui.Form_Main.cmdRefresh.Caption("REFRESH")
+Gui.Form_Main.cmdRefresh.Event(Click,cmdRefresh_Click)
+Gui.Form_Main.cmdStatus.Create(Button)
+Gui.Form_Main.cmdStatus.Size(1710,375)
+Gui.Form_Main.cmdStatus.Position(13260,9510)
+Gui.Form_Main.cmdStatus.Caption("Status Maintenance")
+Gui.Form_Main.cmdStatus.Event(Click,cmdStatus_Click)
+Gui.Form_Main.pic1.Create(PictureBox)
+Gui.Form_Main.pic1.Size(1215,495)
+Gui.Form_Main.pic1.Position(180,210)
+Gui.Form_Status..Create
+Gui.Form_Status..Caption("Status Maintenance")
+Gui.Form_Status..Size(6300,2220)
+Gui.Form_Status..MinX(0)
+Gui.Form_Status..MinY(0)
+Gui.Form_Status..Position(0,0)
+Gui.Form_Status..BackColor(-2147483633)
+Gui.Form_Status..MaxButton(False)
+Gui.Form_Status..MinButton(False)
+Gui.Form_Status..MousePointer(0)
+Gui.Form_Status..Sizeable(False)
+Gui.Form_Status..Event(UnLoad,Form_Status_UnLoad)
+Gui.Form_Status.txtStatus.Create(TextBox,"",True,4215,300,0,975,465,True,0,"Arial",8,-2147483643,1)
+Gui.Form_Status.txtID.Create(TextBox,"",True,600,300,0,225,465,False,0,"Arial",8,-2147483643,1)
+Gui.Form_Status.cmdBrwStatus.Create(Button)
+Gui.Form_Status.cmdBrwStatus.Size(285,285)
+Gui.Form_Status.cmdBrwStatus.Position(5370,465)
+Gui.Form_Status.cmdBrwStatus.Caption("^")
+Gui.Form_Status.cmdBrwStatus.Event(Click,cmdBrwStatus_Click)
+Gui.Form_Status.cmdSaveStat.Create(Button)
+Gui.Form_Status.cmdSaveStat.Size(855,375)
+Gui.Form_Status.cmdSaveStat.Position(255,1065)
+Gui.Form_Status.cmdSaveStat.Caption("Save")
+Gui.Form_Status.cmdSaveStat.Event(Click,cmdSaveStat_Click)
+Gui.Form_Status.cmdDelStat.Create(Button)
+Gui.Form_Status.cmdDelStat.Size(855,375)
+Gui.Form_Status.cmdDelStat.Position(1425,1065)
+Gui.Form_Status.cmdDelStat.Caption("Delete")
+Gui.Form_Status.cmdDelStat.Event(Click,cmdDelStat_Click)
+Gui.Form_Status.cmdCancelStat.Create(Button)
+Gui.Form_Status.cmdCancelStat.Size(855,375)
+Gui.Form_Status.cmdCancelStat.Position(2655,1065)
+Gui.Form_Status.cmdCancelStat.Caption("Cancel")
+Gui.Form_Status.cmdCancelStat.Event(Click,cmdCancelStat_Click)
+Gui.Form_Status.lbl1.Create(Label,"ID",True,645,255,0,240,165,True,0,"Arial",8,-2147483633,0)
+Gui.Form_Status.lbl2.Create(Label,"Engineering Status",True,1935,255,0,1005,165,True,0,"Arial",8,-2147483633,0)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Variable.Global.sPart.Declare(String)
+Variable.Global.sUser4.Declare(String)
+Variable.Global.sUser5.Declare(String)
+Variable.Global.sOrder.Declare(String)
+Variable.Global.sLine.Declare(String)
+Variable.Global.sParent.Declare(String)
+Variable.Global.sAssigned.Declare(String)
+Variable.Global.bUpdate.Declare(Boolean,False)
+Variable.Global.sJob.Declare(String)
+Variable.Global.sSuffix.Declare(String)
+V.Global.sGSSVersion.Declare
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'programmed for Goebel Fixture Company
+'by Don Finch
+'4/26/17
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Global.sGSSVersion.Set(V.Caller.GSSVersion)
+F.Intrinsic.String.Left(V.Global.sGSSVersion,4,V.Global.sGSSVersion)
+
+f.Intrinsic.Control.CallSub(get_data)
+f.Intrinsic.Control.CallSub(format_grid)
+
+gui.Form_Main..Show
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Main.End
+
+Program.Sub.Form_Main_UnLoad.Start
+f.Intrinsic.Control.End
+
+Program.Sub.Form_Main_UnLoad.End
+
+Program.Sub.GsGridControl1_CellValueChanged.Start
+F.Intrinsic.Control.SetErrorHandler("GsGridControl1_CellValueChanged_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+
+
+
+
+f.Intrinsic.Control.SelectCase(v.Args.COLUMN)
+	F.Intrinsic.Control.CaseAny("Assigned","Status")
+	gui.Form_Main.GsGridControl1.getcellvaluebycolumnname("GvEng","Assigned",V.Args.RowIndex,v.Global.sUser4)
+	gui.Form_Main.GsGridControl1.getcellvaluebycolumnname("GvEng","Status",v.Args.RowIndex,V.Global.sUser5)
+	gui.Form_Main.GsGridControl1.getcellvaluebycolumnname("GvEng","Order_No",v.Args.RowIndex,V.Global.sOrder)
+	gui.Form_Main.GsGridControl1.getcellvaluebycolumnname("GvEng","Line",v.Args.RowIndex,V.Global.sLine)
+	f.Intrinsic.Control.CallSub(update_lines)
+	f.Intrinsic.Control.CaseElse
+		f.Intrinsic.Control.ExitSub
+	f.Intrinsic.Control.EndSelect
+
+v.Global.bUpdate.Set(False)
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("GsGridControl1_CellValueChanged_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.GsGridControl1_CellValueChanged.End
+
+Program.Sub.GsGridControl1_RowCellClick.Start
+F.Intrinsic.Control.SetErrorHandler("GsGridControl1_RowCellClick_Err")
+F.Intrinsic.Control.ClearErrors
+
+'Order_no, Line, Project, Phase, Part, Store_Phase, Floor, Dept, Job, Assigned, Status, BOM, Router
+'v.Local..BulkDeclareString(sError,sPart,sStatus,sJob,sSuf,sOrd,sLine)
+'v.Local..BulkDeclareBoolean(bMember,bBom,bRouter)
+'v.Local..BulkDeclareLong(iStatus)
+v.Local.sError.Declare
+v.Local.sPart.Declare
+v.Local.sStatus.Declare
+v.Local.sJob.Declare
+v.Local.sSuf.Declare
+v.Local.sOrd.Declare
+v.Local.sLine.Declare
+v.Local.bMember.Declare
+v.Local.bBom.Declare
+v.Local.bRouter.Declare
+v.Local.iStatus.Declare
+
+'get the values from the Grid
+	gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","BOM",V.Args.RowIndex,v.Local.bBom)
+	gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Router",V.Args.RowIndex,V.Local.bRouter)
+	gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Job",V.Args.RowIndex,V.Local.sJob)
+	gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Suf",V.Args.RowIndex,V.Local.sSuf)
+	gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Order_No",V.Args.RowIndex,V.Local.sOrd)
+	gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Line",V.Args.RowIndex,V.Local.sLine)	
+
+
+
+f.Global.Security.IsInGroup(v.Caller.User,"EDIT",V.Caller.CompanyCode,V.Local.bMember)
+F.Intrinsic.Control.If(V.Local.bMember,=,True)
+		F.Intrinsic.Control.SelectCase(V.Args.COLUMN)
+			f.Intrinsic.Control.Case("Order_No")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Order_No",V.Args.RowIndex,v.Global.sOrder)
+				f.Intrinsic.String.Build("{0}{1}",v.Global.sOrder,"!*!V!*!ZDR",V.Local.sOrd)
+				F.Global.General.CallWrapperAsync(200000,V.Local.sOrd)
+			F.Intrinsic.Control.Case("Line")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Order_No",V.Args.RowIndex,v.Global.sOrder)
+				f.Intrinsic.String.Build("{0}{1}",v.Global.sOrder,"!*!V!*!ZDR",V.Local.sOrd)
+				F.Global.General.CallWrapperAsync(200000,V.Local.sOrd)
+			f.Intrinsic.Control.Case("JOB")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Job",V.Args.RowIndex,v.Global.sJob)
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Suf",v.Args.RowIndex,V.Global.sSuffix)
+				F.Intrinsic.String.Build("7!*!{0}!*!{1}!*!A",v.global.sJob,v.global.sSuffix,V.Local.sJob)
+				F.Global.General.CallWrapperASync(450000,V.Local.sJob)
+			f.Intrinsic.Control.Case("SUF")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Job",V.Args.RowIndex,v.Global.sJob)
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Suf",v.Args.RowIndex,V.Global.sSuffix)
+				F.Intrinsic.String.Build("7!*!{0}!*!{1}!*!A",v.global.sJob,v.global.sSuffix,V.Local.sJob)
+				F.Global.General.CallWrapperASync(450000,V.Local.sJob)
+'			f.Intrinsic.Control.Case("BOM")
+'			f.Intrinsic.Control.If(v.Local.bBom,=,True)
+'				gui.Form_Main.GsGridControl1.getcellvaluebycolumnname("GvEng","Part",V.Args.RowIndex,v.Global.sPart)
+'				f.Intrinsic.String.Trim(v.Global.sPart,v.Global.sPart)
+'				gui.Form_Main.GsGridControl1.SetCellValuebyColumnName("GvEng","BOM",V.Args.RowIndex,False)
+'				v.Local.sStatus.Set("N")
+'			f.Intrinsic.Control.Else
+'				gui.Form_Main.GsGridControl1.GetCellValuebycolumnname("GvEng","Part",V.Args.RowIndex,v.Global.sPart)
+'				f.Intrinsic.String.Trim(v.Global.sPart,v.Global.sPart)
+'				gui.Form_Main.GsGridControl1.SetCellValueByColumnName("GvEng","BOM",V.Args.RowIndex,True)
+'				v.Local.sStatus.Set("Y")
+'			f.Intrinsic.Control.EndIf
+'			f.Intrinsic.Control.CallSub(update_BOM,"STATUS",v.Local.sStatus)
+			
+'			f.Intrinsic.Control.Case("Router")
+'			F.Intrinsic.Control.If(V.Local.bRouter,=,True)
+'				gui.Form_Main.GsGridControl1.GetCellValuebyColumnName("GvEng","Part",V.Args.RowIndex,v.Global.sPart)
+'				f.Intrinsic.String.Trim(v.Global.sPart,v.Global.sPart)
+'				gui.Form_Main.GsGridControl1.SetCellValueByColumnName("GvEng","Router",V.Args.RowIndex,False)
+'				v.Local.iStatus.Set(0)
+'			f.Intrinsic.Control.Else
+'				gui.Form_Main.GsGridControl1.GetCellValuebyColumnName("GvEng","Part",V.Args.RowIndex,v.Global.sPart)
+'				f.Intrinsic.String.Trim(v.Global.sPart,v.Global.sPart)
+'				gui.Form_Main.GsGridControl1.SetCellValueByColumnName("GvEng","Router",V.Args.RowIndex,True)
+'				v.Local.iStatus.Set(1)
+'			f.Intrinsic.Control.EndIf
+'			f.Intrinsic.Control.CallSub(update_router,"STATUS",V.Local.iStatus)
+			f.Intrinsic.Control.Case("Assigned")
+			f.Intrinsic.Control.CallSub(browse_user,"ROW",v.Args.RowIndex)
+			f.Intrinsic.Control.If(v.Global.bUpdate,=,True)
+				gui.Form_Main.GsGridControl1.SetCellValueByColumnName("GvEng","Assigned",v.Args.RowIndex,v.Global.sAssigned)		
+				f.Intrinsic.Control.CallSub(gsgridcontrol1_cellvaluechanged,"RowIndex",V.Args.RowIndex,"COLUMN","Assigned")
+			f.Intrinsic.Control.EndIf
+			f.Intrinsic.Control.Case("Status")
+			f.Intrinsic.Control.CallSub(browse_status)
+			f.Intrinsic.Control.If(v.Global.bUpdate,=,True)
+				gui.Form_Main.GsGridControl1.SetCellValueByColumnName("GvEng","Status",V.Args.RowIndex,v.Global.sAssigned)
+				f.Intrinsic.Control.CallSub(gsgridcontrol1_cellvaluechanged,"RowIndex",V.Args.RowIndex,"COLUMN","Status")
+			f.Intrinsic.Control.EndIf
+			f.Intrinsic.Control.CaseElse
+				f.Intrinsic.Control.ExitSub
+		f.Intrinsic.Control.EndSelect
+f.Intrinsic.Control.Else
+		F.Intrinsic.Control.SelectCase(V.Args.COLUMN)
+			f.Intrinsic.Control.Case("Order_No")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Order_No",V.Args.RowIndex,v.Global.sOrder)
+				f.Intrinsic.String.Build("{0}{1}",v.Global.sOrder,"!*!V!*!ZDR",V.Local.sOrd)
+				F.Global.General.CallWrapperAsync(200000,V.Local.sOrd)
+			F.Intrinsic.Control.Case("Line")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Order_No",V.Args.RowIndex,v.Global.sOrder)
+				f.Intrinsic.String.Build("{0}{1}",v.Global.sOrder,"!*!V!*!ZDR",V.Local.sOrd)
+				F.Global.General.CallWrapperAsync(200000,V.Local.sOrd)
+			f.Intrinsic.Control.Case("Job")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Job",V.Args.RowIndex,v.Global.sJob)
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Suf",v.Args.RowIndex,V.Global.sSuffix)
+				F.Intrinsic.String.Build("7!*!{0}!*!{1}!*!A",v.global.sJob,v.global.sSuffix,V.Local.sJob)
+				F.Global.General.CallWrapperASync(450000,V.Local.sJob)
+			f.Intrinsic.Control.Case("Suf")
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Job",V.Args.RowIndex,v.Global.sJob)
+				gui.Form_Main.GsGridControl1.GetCellValueByColumnName("GvEng","Suf",v.Args.RowIndex,V.Global.sSuffix)
+				F.Intrinsic.String.Build("7!*!{0}!*!{1}!*!A",v.global.sJob,v.global.sSuffix,V.Local.sJob)
+				F.Global.General.CallWrapperASync(450000,V.Local.sJob)
+			f.Intrinsic.Control.CaseElse
+				f.Intrinsic.Control.ExitSub
+			f.Intrinsic.Control.EndSelect		
+f.Intrinsic.Control.endif
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("GsGridControl1_RowCellClick_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.GsGridControl1_RowCellClick.End
+
+Program.Sub.format_grid.Start
+F.Intrinsic.Control.SetErrorHandler("format_grid_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.Local.bMember.Declare(Boolean)
+
+'Order, Line, Project, Phase, Part, Store_Phase, Floor, Dept, Assigned, Status, BOM, Router
+'"DTEng","dvDTEng"
+	gui.Form_Main.GsGridControl1.SetGridViewProperty("GvEng","MultiSelect",True)
+	gui.Form_Main.GsGridControl1.SetGridViewProperty("GvEng","AllowSort",True)
+	gui.Form_Main.GsGridControl1.SetGridViewProperty("GvEng","AllowFilter",True)
+	gui.Form_Main.GsGridControl1.SetGridViewProperty("GvEng","OptionsViewShowGroupPanel",True)
+	gui.Form_Main.GsGridControl1.SetGridViewProperty("GvEng","EnableAppearanceOddRow",True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Job","CellFontUnderline",True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Order_No","CellFontUnderline",True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Line","CellFontUnderline",True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Suf","CellFontUnderline",True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Job","CellForeColor","Blue")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Suf","CellForeColor","Blue")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Order_No","CellForeColor","Blue")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Line","CellForeColor","Blue")
+
+	
+
+f.Global.Security.IsInGroup(v.Caller.User,"EDIT",V.Local.bMember)
+F.Intrinsic.Control.If(V.Local.bMember,=,True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Status","ReadOnly",False)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Assigned","ReadOnly",False)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Assigned","AllowEdit",True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Status","AllowEdit",True)
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Mfg_Start","DisplayCustomDatetime","d")
+f.Intrinsic.Control.EndIf
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Line","Width","60")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Project","Width","60")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Phase","Width","60")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Part","Width","120")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Store_Phase","Width","130")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Floor","Width","130")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Dept","Width","130")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Job","Width","60")
+	gui.Form_Main.GsGridControl1.SetColumnProperty("GvEng","Suf","Width","60")
+	
+'set anchors
+	'0 - None
+	'1 - Top
+	'2 - Bottom
+	'4 - Left
+	'8 - Right
+	gui.Form_Main.GsGridControl1.anchor(15)
+	gui.Form_Main.cmdRefresh.anchor(9)
+	gui.Form_Main.cmdStatus.anchor(10)
+	
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("format_grid_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.format_grid.End
+
+Program.Sub.update_bom.Start
+F.Intrinsic.Control.SetErrorHandler("update_bom_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.Local.sSql.Declare(String)
+
+f.ODBC.Connection!conx.OpenConnection(v.Ambient.PDSN,v.Ambient.PUser,v.Ambient.PPass)
+f.Intrinsic.String.Build("update bom_mstr set bom_complete = '{1}' where parent = '{0}' and part = '{0}'",v.Global.sPart,v.Args.Status,v.Local.sSql)
+f.ODBC.Connection!conx.Execute(v.Local.sSql)
+f.ODBC.Connection!conx.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("update_bom_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.update_bom.End
+
+Program.Sub.update_router.Start
+F.Intrinsic.Control.SetErrorHandler("update_router_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.Local.sSql.Declare(String)
+
+f.ODBC.Connection!conx.OpenConnection(v.Ambient.PDSN,v.Ambient.PUser,v.Ambient.PPass)
+F.Intrinsic.Control.If(V.Global.sGSSVersion,<,2018)
+	f.Intrinsic.String.Build("update router_supp set complete = {1} where rtr_num = '{0}' and type = 'H'",v.Global.sPart,V.Args.status,v.Local.sSql)
+F.Intrinsic.Control.Else
+	f.Intrinsic.String.Build("update router_supp_hdr set complete = {1} where rtr_num = '{0}' and type = 'H'",v.Global.sPart,V.Args.status,v.Local.sSql)
+F.Intrinsic.Control.EndIf
+f.ODBC.Connection!conx.Execute(v.Local.sSql)
+f.ODBC.Connection!conx.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("update_router_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.update_router.End
+
+Program.Sub.get_data.Start
+F.Intrinsic.Control.SetErrorHandler("get_data_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.Local.sSql.Declare(String)
+v.Local.sUsers.Declare(String)
+v.Local.sUserList.Declare(String)
+v.Local.iCount.Declare(Long)
+v.Local.sName.Declare(String)
+v.Local.sNameList.Declare(String)
+v.Local.iLen.Declare(Long)
+
+
+'open connection
+f.ODBC.Connection!conx.OpenConnection(v.Ambient.PDSN,v.Ambient.PUser,v.Ambient.PPass)
+
+'get data
+F.Intrinsic.Control.If(V.Global.sGSSVersion,<,2018)
+	v.Local.sSql.Set("select oh.order_no as Order_No, left(ol.record_no,3) as Line, oh.project as Project, ol.phase as Phase, ol.part as Part, ol.user_1 as Store_Phase, ol.user_2 as Floor, ol.user_3 as Dept, JH.JOB AS JOB, JH.SUFFIX AS SUF, PP.ORIG_START as Mfg_Start, ol.user_4 as Assigned, ol.user_5 Status, Cast(Case When BM.BOM_COMPLETE = 'Y' THEN 1 Else 0 END as BIT) AS BOM, Cast(Case When RS.COMPLETE = '1' THEN 1 Else 0 END as BIT) as Router, Cast(case when JH.FLAG_HOLD = 'Y' THEN 1 ELSE 0 END AS BIT) AS HOLD from v_order_header oh LEFT OUTER JOIN v_order_lines ol on oh.order_no = ol.order_no LEFT OUTER JOIN V_BOM_MSTR BM ON OL.PART = BM.PARENT AND BM.SEQUENCE_BOM = '0000' LEFT OUTER JOIN V_ROUTER_SUPP RS ON OL.PART = RS.RTR_NUM AND RS.TYPE = 'H' LEFT OUTER JOIN v_project_xref px on px.so = ol.order_no and px.so_line = ol.record_no LEFT OUTER JOIN v_project_phase pp on pp.project = px.project and pp.phase = px.phase LEFT OUTER JOIN V_ORDER_TO_WO OW ON OW.ORDER_NO = OL.ORDER_NO AND OW.ORDER_LINE = OL.RECORD_NO LEFT OUTER JOIN V_JOB_HEADER JH ON JH.JOB = OW.JOB AND JH.SUFFIX = OW.SUFFIX where JH.FLAG_WO_PRTD <> 'R' AND JH.FLAG_WO_PRTD <> 'X'")
+F.Intrinsic.Control.Else
+	v.Local.sSql.Set("select oh.order_no as Order_No, left(ol.record_no,3) as Line, oh.project as Project, ol.phase as Phase, ol.part as Part, ol.user_1 as Store_Phase, ol.user_2 as Floor, ol.user_3 as Dept, JH.JOB AS JOB, JH.SUFFIX AS SUF, PP.ORIG_START as Mfg_Start, ol.user_4 as Assigned, ol.user_5 Status, Cast(Case When BM.BOM_COMPLETE = 'Y' THEN 1 Else 0 END as BIT) AS BOM, Cast(Case When RS.COMPLETE = '1' THEN 1 Else 0 END as BIT) as Router, Cast(case when JH.FLAG_HOLD = 'Y' THEN 1 ELSE 0 END AS BIT) AS HOLD from v_order_header oh LEFT OUTER JOIN v_order_lines ol on oh.order_no = ol.order_no LEFT OUTER JOIN V_BOM_MSTR BM ON OL.PART = BM.PARENT AND BM.SEQUENCE_BOM = '0000' LEFT OUTER JOIN V_ROUTER_SUPP_HDR RS ON OL.PART = RS.RTR_NUM AND RS.TYPE = 'H' LEFT OUTER JOIN v_project_xref px on px.so = ol.order_no and px.so_line = ol.record_no LEFT OUTER JOIN v_project_phase pp on pp.project = px.project and pp.phase = px.phase LEFT OUTER JOIN V_ORDER_TO_WO OW ON OW.ORDER_NO = OL.ORDER_NO AND OW.ORDER_LINE = OL.RECORD_NO LEFT OUTER JOIN V_JOB_HEADER JH ON JH.JOB = OW.JOB AND JH.SUFFIX = OW.SUFFIX where JH.FLAG_WO_PRTD <> 'R' AND JH.FLAG_WO_PRTD <> 'X'")
+F.Intrinsic.Control.EndIf	
+f.Data.DataTable.CreateFromSQL("DTEng","conx",v.Local.sSql,True)
+'create view
+f.Data.DataView.Create("DTEng","dvDTEng")
+'set datasource and gridview
+gui.Form_Main.GsGridControl1.DataSource("DTEng")
+gui.Form_Main.GsGridControl1.AddGridviewFromDataview("GvEng","DTEng","dvDTEng")
+
+'building a list of engineers for data selection in the grid
+f.Global.Security.GetGroupMembers("ENG",V.Caller.CompanyCode,V.Local.sUsers)
+f.Intrinsic.String.Split(v.Local.sUsers,"*!*",v.Local.sUserList)
+f.Intrinsic.Control.For(v.Local.iCount,0,v.Local.sUserList.UBound,1)
+	f.Global.Security.GetFullName(v.Local.sUserList(v.Local.iCount),v.Caller.CompanyCode,v.Local.sName)
+	f.Intrinsic.String.Concat(v.Local.sNameList,V.Local.sUserList(V.Local.iCount),"#!#",V.Local.sName,"*!*",v.Local.sNameList)
+f.Intrinsic.Control.Next(v.Local.iCount)
+
+'triming off the last double delimeter to prevent an extra blank row
+F.Intrinsic.String.Len(V.Local.sNameList,V.Local.iLen)
+F.Intrinsic.Math.Sub(V.Local.iLen,3,V.Local.iLen)
+F.Intrinsic.String.Left(V.Local.sNameList,V.Local.iLen,V.Local.sNameList)
+
+F.Data.DataTable.CreateFromString("dtUser",v.Local.sNameList,"USERID*!*NAME","STRING*!*STRING","#!#","*!*",True)
+
+
+'create a global list of status codes to select within the grid
+'F.Data.DataTable.CreateFromString("dtReason","
+
+f.ODBC.Connection!conx.Close
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("get_data_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.get_data.End
+
+Program.Sub.cmdRefresh_Click.Start
+F.Intrinsic.Control.SetErrorHandler("Form_Main_UnLoad_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+f.Data.DataView.Close("DTEng","DvDTEng")
+f.Data.DataTable.Close("DTEng")
+f.Data.DataTable.Close("DTUser")
+
+f.Intrinsic.Control.CallSub(get_data)
+f.Intrinsic.Control.CallSub(format_grid)
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Form_Main_UnLoad_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdRefresh_Click.End
+
+Program.Sub.update_lines.Start
+F.Intrinsic.Control.SetErrorHandler("update_lines_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.Local.sSql.Declare(String)
+
+f.Intrinsic.String.RPad(v.Global.sLine,"0",4,v.Global.sLine)
+f.Intrinsic.String.Build("Update order_lines set user_4 = '{0}', user_5 = '{1}' where order_no = '{2}' and record_no = '{3}'",v.Global.sUser4,v.Global.sUser5,v.Global.sOrder,v.Global.sLine,v.Local.sSql)
+f.ODBC.Connection!conx.OpenConnection(v.Ambient.PDSN,v.Ambient.PUser,v.Ambient.PPass)
+f.ODBC.Connection!conx.Execute(v.Local.sSql)
+f.ODBC.Connection!conx.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("update_lines_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.update_lines.End
+
+Program.Sub.browse_user.Start
+F.Intrinsic.Control.Try
+     V.Local.sError.Declare(String)
+     v.Local.sRet.Declare(String)
+     V.Local.sTitles.Declare(String)
+     V.Local.sWidths.Declare(String)
+     V.Local.sDTString.Declare(String)
+     V.Local.iAlign.Declare(Long)
+     V.Local.sFormat.Declare(String)
+
+
+F.Intrinsic.Control.If(V.DataView.dtUser!dtUser.Exists,=,False)
+         F.Data.DataView.Create("dtUser","dtUser")
+     F.Intrinsic.Control.EndIf
+
+F.Data.DataView.ToString("dtUser","dtUser","UserId*!*Name","*!*","@!@",V.Local.sRet)
+
+'    F.Intrinsic.String.Split(V.Local.sRet,"@!@",V.Local.sRet)
+
+     V.Local.sTitles.Set("UserID*!*Name")
+     V.Local.sWidths.Set("400*!*700")
+     F.Intrinsic.String.Split("0*!*0","*!*",V.Local.iAlign)
+     F.Intrinsic.String.Split("*!*","*!*",V.Local.sFormat)
+     V.Local.sDTString.Set(V.Local.sRet(0))
+
+     V.Local.sRet.Set("")
+F.Intrinsic.String.Split(V.Local.sTitles,"*!*",V.Local.sTitles)
+F.Intrinsic.String.Split(V.Local.sWidths,"*!*",V.Local.sWidths)
+'f.Intrinsic.UI.BrowserFromString("PartBrowser",v.Local.sRet,"&!&","*!*",v.Local.sTitles,v.Local.sWidths,18000,10000,v.Local.sFormat,v.Local.iAlign,v.Local.sRet)
+     'F.Intrinsic.UI.SetBrowserHotTypeAhead(True)
+
+     'Opening browser
+     F.Intrinsic.UI.BrowserFromString("Select User",V.Local.sDTString,"*!*","@!@",v.Local.sTitles,v.Local.sWidths.Long,9000,5000,V.Local.sFormat,V.Local.iAlign,v.Local.sRet) 
+
+     F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+         F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+		v.Global.bUpdate.Set(True)
+		v.Global.sAssigned.Set(v.Local.sRet(1))
+     F.Intrinsic.Control.EndIf
+
+'F.Intrinsic.Control.Catch
+f.Intrinsic.Control.ExitSub
+
+     F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+         Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description",V.Ambient.ErrorDescription,V.Local.sError)
+         F.Intrinsic.UI.Msgbox(V.Local.sError)
+     Function.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndTry
+
+Program.Sub.browse_user.End
+
+Program.Sub.browse_status.Start
+F.Intrinsic.Control.SetErrorHandler("browse_status_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sSql.Declare(String)
+V.Local.sTitles.Declare(String)
+V.Local.iWidths.Declare(Long)
+V.Local.sRet.Declare(String)
+
+'SELECT THE STATUS
+F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+V.Local.sSql.Set("SELECT * FROM GAB_4691_ENG_DASH")
+F.Intrinsic.String.Split("ID*!*STATUS","*!*",V.Local.sTitles)
+F.Intrinsic.String.Split("100*!*800","*!*",V.Local.iWidths)
+F.Intrinsic.UI.Browser("Select Status","conx",V.Local.sSql,V.Local.sTitles,V.Local.iWidths,V.Local.sRet)
+F.ODBC.Connection!conx.Close
+
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+    F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+v.Global.bUpdate.Set(True)
+v.Global.sAssigned.Set(v.Local.sRet(1))
+F.Intrinsic.Control.EndIf
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("browse_status_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.browse_status.End
+
+Program.Sub.get_members.Start
+'this subroutine is for generating a global datatabel that holds the member names of the eng security group.
+
+Program.Sub.get_members.End
+
+Program.Sub.Maintenance.Start
+Program.Sub.Maintenance.End
+
+Program.Sub.cmdStatus_Click.Start
+F.Intrinsic.Control.SetErrorHandler("cmdStatus_Click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+gui.Form_Status..Show
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdStatus_Click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdStatus_Click.End
+
+Program.Sub.cmdBrwStatus_Click.Start
+F.Intrinsic.Control.SetErrorHandler("browse_status_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+V.Local.sSql.Declare(String)
+V.Local.sTitles.Declare(String)
+V.Local.iWidths.Declare(Long)
+V.Local.sRet.Declare(String)
+
+'SELECT THE STATUS
+F.ODBC.Connection!conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+V.Local.sSql.Set("SELECT * FROM GAB_4691_ENG_DASH")
+F.Intrinsic.String.Split("ID*!*STATUS","*!*",V.Local.sTitles)
+F.Intrinsic.String.Split("100*!*800","*!*",V.Local.iWidths)
+F.Intrinsic.UI.Browser("Select Status","conx",V.Local.sSql,V.Local.sTitles,V.Local.iWidths,V.Local.sRet)
+F.ODBC.Connection!conx.Close
+
+
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+    F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+	gui.Form_Status.txtID.Text(v.Local.sRet(0))
+	gui.Form_Status.txtStatus.Text(V.Local.sRet(1))
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("browse_status_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.cmdBrwStatus_Click.End
+
+Program.Sub.cmdSaveStat_Click.Start
+F.Intrinsic.Control.SetErrorHandler("cmdSaveStat_Click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sStatus.Declare(String)
+v.Local.sID.Declare(String)
+v.Local.sSql.Declare(String)
+
+v.Local.sID.Set(v.Screen.Form_Status!txtID.Text)
+v.Local.sStatus.Set(v.Screen.Form_Status!txtStatus.Text)
+
+F.Intrinsic.Control.If(V.Local.sID,>,"")
+	F.Intrinsic.String.Build("UPDATE GAB_4691_ENG_DASH SET STATUS = '{0}' WHERE ID = '{1}'",V.Local.sStatus,V.Local.sID,V.Local.sSql)
+	f.ODBC.Connection!conx.OpenConnection(v.Ambient.PDSN,v.Ambient.PUser,v.Ambient.PPass)
+	f.ODBC.Connection!conx.Execute(v.Local.sSql)
+	f.ODBC.Connection!conx.Close
+f.Intrinsic.Control.ElseIf(v.Local.sID,=,"")
+	f.ODBC.Connection!conx.OpenConnection(v.Ambient.PDSN,v.Ambient.PUser,v.Ambient.PPass)
+	f.ODBC.Connection!conx.OpenRecordsetRW("rst","select * from GAB_4691_ENG_DASH")
+	F.ODBC.conx!rst.AddNew
+		f.ODBC.conx!rst.Set!STATUS(V.Local.sStatus)
+		F.ODBC.conx!rst.Update
+F.Intrinsic.Control.EndIf
+GUI.Form_Status.txtStatus.Text("")
+F.ODBC.Connection!conx.Close
+		
+	
+
+
+
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdSaveStat_Click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdSaveStat_Click.End
+
+Program.Sub.cmdDelStat_Click.Start
+F.Intrinsic.Control.SetErrorHandler("cmdDelStat_Click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+v.Local.sID.Declare(String)
+v.Local.sSql.Declare(String)
+
+v.Local.sID.Set(v.Screen.Form_Status!txtID.Text)
+
+f.ODBC.Connection!conx.OpenConnection(v.Ambient.PDSN,v.Ambient.PUser,v.Ambient.PPass)
+f.Intrinsic.String.Build("delete from GAB_4691_ENG_DASH WHERE ID = '{0}'",V.Local.sID,V.Local.sSql)
+f.ODBC.Connection!conx.Execute(v.Local.sSql)
+gui.Form_Status.txtID.Text("")
+gui.Form_Status.txtStatus.Text("")
+f.ODBC.Connection!conx.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdDelStat_Click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdDelStat_Click.End
+
+Program.Sub.cmdCancelStat_Click.Start
+F.Intrinsic.Control.SetErrorHandler("cmdCancelStat_Click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+gui.Form_Status..Visible(False)
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdCancelStat_Click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.cmdCancelStat_Click.End
+
+Program.Sub.Form_Status_UnLoad.Start
+F.Intrinsic.Control.SetErrorHandler("Form_Status_UnLoad_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+gui.Form_Status..Visible(False)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Form_Status_UnLoad_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_4691_ENG_DASH.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+Program.Sub.Form_Status_UnLoad.End
+
+Program.Sub.Comments.Start
+${$0$}$GAB_PM_END_WF$}$DFINCH$}$4/26/2017 10:49:52 PM$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$This is an engineering dashboard that helps the customer with new projects, new bom's, and new routers.  Using BOM/Router complete flags, user fields on sales order lines, and the order_to_wo flag, they can manage where a SO Line item is in the engineering process.
+${$5$}$2.0.0.0$}$2
+${$6$}$dyunus$}$20201125155303917$}$xZ6SHi8g7O0Qsxe6AiO2NH3PnOKQRy0Tb/XtkQ4ntc5A+TEaIf3p0wCTAwKQDgWir2k67IGPf/U=
+Program.Sub.Comments.End
